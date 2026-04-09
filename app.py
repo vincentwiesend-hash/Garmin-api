@@ -2,15 +2,21 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from garminconnect import Garmin
 import os
+from datetime import date
 
 app = Flask(__name__)
 CORS(app)
 
+# Login einmal beim Start
+client = None
+
 def get_client():
-    email = os.environ.get("GARMIN_EMAIL")
-    password = os.environ.get("GARMIN_PASSWORD")
-    client = Garmin(email, password)
-    client.login()
+    global client
+    if client is None:
+        email = os.environ.get("GARMIN_EMAIL")
+        password = os.environ.get("GARMIN_PASSWORD")
+        client = Garmin(email, password)
+        client.login()
     return client
 
 @app.route("/")
@@ -24,19 +30,18 @@ def health():
 @app.route("/activities")
 def activities():
     try:
-        client = get_client()
-        data = client.get_activities(0, 30)
+        data = get_client().get_activities(0, 30)
         return jsonify(data)
     except Exception as e:
+        global client
+        client = None
         return jsonify({"error": str(e)}), 500
 
 @app.route("/sleep")
 def sleep():
     try:
-        from datetime import date
-        client = get_client()
         today = date.today().isoformat()
-        data = client.get_sleep_data(today)
+        data = get_client().get_sleep_data(today)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -44,10 +49,8 @@ def sleep():
 @app.route("/hrv")
 def hrv():
     try:
-        from datetime import date
-        client = get_client()
         today = date.today().isoformat()
-        data = client.get_hrv_data(today)
+        data = get_client().get_hrv_data(today)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -55,10 +58,8 @@ def hrv():
 @app.route("/stats")
 def stats():
     try:
-        from datetime import date
-        client = get_client()
         today = date.today().isoformat()
-        data = client.get_stats(today)
+        data = get_client().get_stats(today)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -13,6 +13,14 @@ def get_client():
     client.login()
     return client
 
+@app.route("/")
+def index():
+    return jsonify({"status": "Athlete OS Garmin API läuft!"})
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route("/activities")
 def activities():
     try:
@@ -55,10 +63,6 @@ def stats():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok"})
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
